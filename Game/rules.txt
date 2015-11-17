@@ -1,0 +1,14 @@
+-----RULES-----
+
+Number of players: 2-4
+
+GOAL
+Each player controls 4 playing pieces. The objective is to reach the center of the board with each piece. This is achieved by moving your pieces, clock-wise, along the outer ring of tiles until you get to the tile right before your starting tile. When you reach that tile, instead of starting another lap, you turn and move straight towards the center, along your final stretch, until you land on it. 
+
+SETUP
+Every player's pieces are placed in the large tile matching the color of the pieces; the player's spawn.
+
+GAMEPLAY
+Turn order is clock-wise, e.g. if RED player starts then GREEN is next and BLUE goes after that and so on. 
+
+You start a turn by rolling a six-sided die. Then, choose one of your pieces and move it the same number of tiles as the die show. Leaving the spawn can only be done if the die cast was 1 or 6. The starting tile (the tile you move to when leaving the spawn) is the tile matching your team's color between your spawn and your final stretch (the line of tiles going out from the center that mathces your color). Your piece may not pass nor end its move on a tile occupied by another of your pieces. If your piece ends its move on a tile with another player's piece that piece is prodded, meaning it returns to its spawn. 
