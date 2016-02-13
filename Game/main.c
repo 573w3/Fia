@@ -149,6 +149,7 @@ int main(int argc, char* args[])
 		}
 		else
 		{
+			// Seeding random for the die game object
 			srand(time(NULL));
 			SDL_Event e;
 
@@ -169,6 +170,7 @@ int main(int argc, char* args[])
 					}
 					else
 					{
+						// Handle event, if it fails quit application
 						if (!eventHandler(&e))
 						{
 							quit = 1;
@@ -383,35 +385,19 @@ int loadGame()
 	/* Finish tiles */
 	tiles[24] = (Tile){ .nextTile = &tiles[25], .posX = boardLeft + 3 * radiusSmall + 3 * spacing, .posY = boardTop + 5 * radiusSmall + 5 * spacing, .radius = radiusSmall, .unit = NULL };
 	tiles[24].color = RED;
-
 	tiles[25] = (Tile){ .nextTile = NULL, .posX = boardLeft + 3 * radiusSmall + 3 * spacing, .posY = boardTop + 4 * radiusSmall + 4 * spacing, .radius = radiusSmall, .unit = NULL };
 	tiles[25].color = RED;
-
 	tiles[26] = (Tile){ .nextTile = &tiles[27], .posX = boardLeft + 1 * radiusSmall + 1 * spacing, .posY = boardTop + 3 * radiusSmall + 3 * spacing, .radius = radiusSmall, .unit = NULL };
 	tiles[26].color = GREEN;
-
 	tiles[27] = (Tile){ .nextTile = NULL, .posX = boardLeft + 2 * radiusSmall + 2 * spacing, .posY = boardTop + 3 * radiusSmall + 3 * spacing, .radius = radiusSmall, .unit = NULL };
 	tiles[27].color = GREEN;
-
 	tiles[28] = (Tile){ .nextTile = &tiles[29], .posX = boardLeft + 3 * radiusSmall + 3 * spacing, .posY = boardTop + 1 * radiusSmall + 1 * spacing, .radius = radiusSmall };
 	tiles[28].color = BLUE;
-
-	tiles[29].nextTile = NULL;
-	tiles[29].posX = boardLeft + 3 * radiusSmall + 3 * spacing;
-	tiles[29].posY = boardTop + 2 * radiusSmall + 2 * spacing;
-	tiles[29].radius = radiusSmall;
+	tiles[29] = (Tile) { .nextTile = NULL, .posX = boardLeft + 3 * radiusSmall + 3 * spacing, .posY = boardTop + 2 * radiusSmall + 2 * spacing, .radius = radiusSmall };
 	tiles[29].color = BLUE;
-
-	tiles[30].nextTile = &tiles[31];
-	tiles[30].posX = boardLeft + 5 * radiusSmall + 5 * spacing;
-	tiles[30].posY = boardTop + 3 * radiusSmall + 3 * spacing;
-	tiles[30].radius = radiusSmall;
+	tiles[30] = (Tile) { .nextTile = &tiles[31], .posX = boardLeft + 5 * radiusSmall + 5 * spacing, .posY = boardTop + 3 * radiusSmall + 3 * spacing, .radius = radiusSmall };
 	tiles[30].color = YELLOW;
-
-	tiles[31].nextTile = NULL;
-	tiles[31].posX = boardLeft + 4 * radiusSmall + 4 * spacing;
-	tiles[31].posY = boardTop + 3 * radiusSmall + 3 * spacing;
-	tiles[31].radius = radiusSmall;
+	tiles[31] = (Tile) { .nextTile = NULL, .posX = boardLeft + 4 * radiusSmall + 4 * spacing, .posY = boardTop + 3 * radiusSmall + 3 * spacing, .radius = radiusSmall };
 	tiles[31].color = YELLOW;
 
 	/* Teams */
@@ -537,6 +523,7 @@ int handleGameEvent(SDL_Event* e)
 	int success = 1;
 	if (e->type == SDL_KEYDOWN)
 	{
+		// quit to main menu
 		if (e->key.keysym.sym == SDLK_ESCAPE)
 		{
 			unloadGame();
@@ -565,19 +552,24 @@ int handleGameEvent(SDL_Event* e)
 			{
 				if (e->key.keysym.sym == SDLK_RETURN)
 				{
+					Unit* currentUnit = &teams[turn].units[selectedUnitIndex];
+
  					// move player
-					if ((teams[turn].units[selectedUnitIndex].position->type == SPAWN && (die->currentValue == 1 || die->currentValue == 6)) || teams[turn].units[selectedUnitIndex].position->type != SPAWN)
+					if ((teams[turn].units[selectedUnitIndex].position->type == SPAWN && (die->currentValue == 1 || die->currentValue == 6)) ||
+						teams[turn].units[selectedUnitIndex].position->type != SPAWN)
 					{
 						int moveLegal = 0;
 						Tile* origPos = teams[turn].units[selectedUnitIndex].position;
 
 						// TODO: have to finish on the finish tile
 						for (int i = 0; i < die->currentValue; i++) {
+
+							// move to next tile
 							teams[turn].units[selectedUnitIndex].position = teams[turn].units[selectedUnitIndex].position->nextTile;
 						}
 
 						// if tile was empty
-						if (teams[turn].units[selectedUnitIndex].position->unit == NULL) 
+						if (currentUnit->position->unit == NULL)
 						{
 							moveLegal = 1;
 						}
@@ -586,7 +578,7 @@ int handleGameEvent(SDL_Event* e)
 							// if tile is occupied by team member
 							if (strcmp(teams[turn].units[selectedUnitIndex].position->unit->team->name, teams[turn].name) == 0)
 							{
-								
+								moveLegal = 0;
 							}
 							else 
 							{
@@ -595,11 +587,12 @@ int handleGameEvent(SDL_Event* e)
 									if (teams[turn].units[selectedUnitIndex].position->unit->team->spawn[i]->unit == NULL)
 									{
 										teams[turn].units[selectedUnitIndex].position->unit->position = teams[turn].units[selectedUnitIndex].position->unit->team->spawn[i];
+										
+										// break loop
 										i = 4;
 									}
 								}
 								
-
 								moveLegal = 1;
 							}
 						}
