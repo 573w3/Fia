@@ -553,19 +553,20 @@ int handleGameEvent(SDL_Event* e)
 				if (e->key.keysym.sym == SDLK_RETURN)
 				{
 					Unit* currentUnit = &teams[turn].units[selectedUnitIndex];
+					int dieValue = die->currentValue;
 
  					// move player
-					if ((teams[turn].units[selectedUnitIndex].position->type == SPAWN && (die->currentValue == 1 || die->currentValue == 6)) ||
-						teams[turn].units[selectedUnitIndex].position->type != SPAWN)
+					if ((currentUnit->position->type == SPAWN && (dieValue == 1 || dieValue == 6)) ||
+							currentUnit->position->type != SPAWN)
 					{
 						int moveLegal = 0;
-						Tile* origPos = teams[turn].units[selectedUnitIndex].position;
+						Tile* origPos = currentUnit->position;
 
 						// TODO: have to finish on the finish tile
-						for (int i = 0; i < die->currentValue; i++) {
-
+						for (int i = 0; i < dieValue; i++) 
+						{
 							// move to next tile
-							teams[turn].units[selectedUnitIndex].position = teams[turn].units[selectedUnitIndex].position->nextTile;
+							currentUnit->position = currentUnit->position->nextTile;
 						}
 
 						// if tile was empty
@@ -576,18 +577,23 @@ int handleGameEvent(SDL_Event* e)
 						else 
 						{
 							// if tile is occupied by team member
-							if (strcmp(teams[turn].units[selectedUnitIndex].position->unit->team->name, teams[turn].name) == 0)
+							if (strcmp(currentUnit->position->unit->team->name, teams[turn].name) == 0)
 							{
 								moveLegal = 0;
 							}
 							else 
 							{
+								Unit* proddedUnit = currentUnit->position->unit;
+								
 								for (int i = 0; i < 4; i++)
 								{
-									if (teams[turn].units[selectedUnitIndex].position->unit->team->spawn[i]->unit == NULL)
+									Tile* currentSpawn = proddedUnit->team->spawn[i];
+
+									if (currentSpawn->unit == NULL)
 									{
-										teams[turn].units[selectedUnitIndex].position->unit->position = teams[turn].units[selectedUnitIndex].position->unit->team->spawn[i];
-										
+										proddedUnit->position = currentSpawn;
+										currentSpawn->unit = proddedUnit;
+
 										// break loop
 										i = 4;
 									}
@@ -599,14 +605,14 @@ int handleGameEvent(SDL_Event* e)
 
 						if (moveLegal)
 						{
-							teams[turn].units[selectedUnitIndex].position->unit = &teams[turn].units[selectedUnitIndex];
+							currentUnit->position->unit = currentUnit;
 							origPos->unit = NULL;
 							turn = (turn + 1) % nrOfTeams;
 							setGamePhase(ROLL);
 						}
 						else
 						{
-							teams[turn].units[selectedUnitIndex].position = origPos;
+							currentUnit->position = origPos;
 						}
 					}
 				}
