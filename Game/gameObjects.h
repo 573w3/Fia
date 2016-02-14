@@ -36,6 +36,7 @@ struct Unit
 {
 	Team* team;
 	Tile* position;
+	int finished;
 };
 
 struct Team
