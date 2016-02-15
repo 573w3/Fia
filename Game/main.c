@@ -261,6 +261,7 @@ int turn = 0;
 GamePhase phase = ROLL;
 int selectedUnitIndex;
 int pauseInput = 0;
+int outerRingSize = 24;
 
 // TODO: a list of animations that are worked through during game render
 // TODO: pointer
@@ -383,21 +384,21 @@ int loadGame()
 	tiles[23].color = RED;
 
 	/* Finish tiles */
-	tiles[24] = (Tile){ .nextTile = &tiles[25], .posX = boardLeft + 3 * radiusSmall + 3 * spacing, .posY = boardTop + 5 * radiusSmall + 5 * spacing, .radius = radiusSmall, .unit = NULL };
+	tiles[24] = (Tile){ .nextTile = &tiles[25], .posX = boardLeft + 3 * radiusSmall + 3 * spacing, .posY = boardTop + 5 * radiusSmall + 5 * spacing, .radius = radiusSmall, .type = FINISH, .unit = NULL };
 	tiles[24].color = RED;
-	tiles[25] = (Tile){ .nextTile = NULL, .posX = boardLeft + 3 * radiusSmall + 3 * spacing, .posY = boardTop + 4 * radiusSmall + 4 * spacing, .radius = radiusSmall, .unit = NULL };
+	tiles[25] = (Tile){ .nextTile = NULL, .posX = boardLeft + 3 * radiusSmall + 3 * spacing, .posY = boardTop + 4 * radiusSmall + 4 * spacing, .radius = radiusSmall, .type = FINISH, .unit = NULL };
 	tiles[25].color = RED;
-	tiles[26] = (Tile){ .nextTile = &tiles[27], .posX = boardLeft + 1 * radiusSmall + 1 * spacing, .posY = boardTop + 3 * radiusSmall + 3 * spacing, .radius = radiusSmall, .unit = NULL };
+	tiles[26] = (Tile){ .nextTile = &tiles[27], .posX = boardLeft + 1 * radiusSmall + 1 * spacing, .posY = boardTop + 3 * radiusSmall + 3 * spacing, .radius = radiusSmall, .type = FINISH, .unit = NULL };
 	tiles[26].color = GREEN;
-	tiles[27] = (Tile){ .nextTile = NULL, .posX = boardLeft + 2 * radiusSmall + 2 * spacing, .posY = boardTop + 3 * radiusSmall + 3 * spacing, .radius = radiusSmall, .unit = NULL };
+	tiles[27] = (Tile){ .nextTile = NULL, .posX = boardLeft + 2 * radiusSmall + 2 * spacing, .posY = boardTop + 3 * radiusSmall + 3 * spacing, .radius = radiusSmall, .type = FINISH, .unit = NULL };
 	tiles[27].color = GREEN;
-	tiles[28] = (Tile){ .nextTile = &tiles[29], .posX = boardLeft + 3 * radiusSmall + 3 * spacing, .posY = boardTop + 1 * radiusSmall + 1 * spacing, .radius = radiusSmall };
+	tiles[28] = (Tile){ .nextTile = &tiles[29], .posX = boardLeft + 3 * radiusSmall + 3 * spacing, .posY = boardTop + 1 * radiusSmall + 1 * spacing, .radius = radiusSmall, .type = FINISH, .unit = NULL };
 	tiles[28].color = BLUE;
-	tiles[29] = (Tile) { .nextTile = NULL, .posX = boardLeft + 3 * radiusSmall + 3 * spacing, .posY = boardTop + 2 * radiusSmall + 2 * spacing, .radius = radiusSmall };
+	tiles[29] = (Tile) { .nextTile = NULL, .posX = boardLeft + 3 * radiusSmall + 3 * spacing, .posY = boardTop + 2 * radiusSmall + 2 * spacing, .radius = radiusSmall, .type = FINISH, .unit = NULL };
 	tiles[29].color = BLUE;
-	tiles[30] = (Tile) { .nextTile = &tiles[31], .posX = boardLeft + 5 * radiusSmall + 5 * spacing, .posY = boardTop + 3 * radiusSmall + 3 * spacing, .radius = radiusSmall };
+	tiles[30] = (Tile) { .nextTile = &tiles[31], .posX = boardLeft + 5 * radiusSmall + 5 * spacing, .posY = boardTop + 3 * radiusSmall + 3 * spacing, .radius = radiusSmall, .type = FINISH, .unit = NULL };
 	tiles[30].color = YELLOW;
-	tiles[31] = (Tile) { .nextTile = NULL, .posX = boardLeft + 4 * radiusSmall + 4 * spacing, .posY = boardTop + 3 * radiusSmall + 3 * spacing, .radius = radiusSmall };
+	tiles[31] = (Tile) { .nextTile = NULL, .posX = boardLeft + 4 * radiusSmall + 4 * spacing, .posY = boardTop + 3 * radiusSmall + 3 * spacing, .radius = radiusSmall, .type = FINISH, .unit = NULL };
 	tiles[31].color = YELLOW;
 
 	/* Teams */
@@ -433,7 +434,7 @@ int loadGame()
 	{
 		for (int j = 0; j < teamSize; j++)
 		{
-			teams[i].units[j] = (Unit){ .team = &teams[i], .position = teams[i].spawn[j] };
+			teams[i].units[j] = (Unit){ .team = &teams[i], .position = teams[i].spawn[j], .finished = 0 };
 			teams[i].units[j].position->unit = &teams[i].units[j];
 		}
 	}
@@ -480,23 +481,32 @@ void renderGame()
 	{
 		for (int j = 0; j < teamSize; j++)
 		{
-			int posX = (teams[i].units[j].position->posX + (teams[i].units[j].position->radius / 2)) - (playerWidth / 2);
-			int posY = (teams[i].units[j].position->posY + (teams[i].units[j].position->radius / 2)) - (playerHeight / 2);
-			renderTexture(playersSprite, renderer, posX, posY, &teams[i].playerClip, 0, NULL, SDL_FLIP_NONE);
+			Unit* unit = &teams[i].units[j];
+
+			if (!unit->finished)
+			{
+				int posX = (unit->position->posX + (unit->position->radius / 2)) - (playerWidth / 2);
+				int posY = (unit->position->posY + (unit->position->radius / 2)) - (playerHeight / 2);
+				renderTexture(playersSprite, renderer, posX, posY, &teams[i].playerClip, 0, NULL, SDL_FLIP_NONE);
+			}
 		}
 
-
+		// render the selected unit marker
 		SDL_SetRenderDrawColor(renderer, selectedColor, selectedColor, selectedColor, 0xFF);
-		SDL_Rect rect = 
-		{ 
-			teams[turn].units[selectedUnitIndex].position->posX + (((teams[turn].units[selectedUnitIndex].position->radius) / 2) - 10 / 2), 
-			teams[turn].units[selectedUnitIndex].position->posY, 10, 10 
-		};
-		SDL_RenderFillRect(renderer, &rect);
-		if (selectedColor == 0) {
-			selectedColor = 0xFF;
-		} else {
-			selectedColor--;
+		if (!teams[turn].units[selectedUnitIndex].finished)
+		{
+			SDL_Rect rect =
+			{
+				teams[turn].units[selectedUnitIndex].position->posX + (((teams[turn].units[selectedUnitIndex].position->radius) / 2) - 10 / 2),
+				teams[turn].units[selectedUnitIndex].position->posY, 10, 10
+			};
+			SDL_RenderFillRect(renderer, &rect);
+			if (selectedColor == 0) {
+				selectedColor = 0xFF;
+			}
+			else {
+				selectedColor--;
+			}
 		}
 	}
 
@@ -565,8 +575,55 @@ int handleGameEvent(SDL_Event* e)
 						// TODO: have to finish on the finish tile
 						for (int i = 0; i < dieValue; i++) 
 						{
-							// move to next tile
-							currentUnit->position = currentUnit->position->nextTile;
+							int isNotInSpawn = 1;
+
+							for (int j = 0; j < teamSize; j++)
+							{
+								if (currentUnit->team->spawn[j] == currentUnit->position)
+								{
+									isNotInSpawn = 0;
+									j = teamSize;
+								}
+							}
+
+							int b = 1;
+							// if the next tile is next from spawn, means go to finish stretch
+							if (currentUnit->position != NULL)
+							{
+								if (currentUnit->position->nextTile == currentUnit->team->spawn[0]->nextTile && isNotInSpawn)
+								{
+									currentUnit->position = currentUnit->team->finish;
+									b = 0;
+								}
+							}
+							
+							if (b)
+							{
+								if (currentUnit->position == NULL)
+								{
+									currentUnit->position = currentUnit->team->finish->nextTile;
+								}
+								else
+								{
+									// move to next tile
+									currentUnit->position = currentUnit->position->nextTile;
+								}
+
+								int isLastStep = i == (dieValue - 1);
+								if (currentUnit->position == NULL && isLastStep)
+								{
+									currentUnit->finished = 1;
+								}
+							}
+						}
+
+						if (currentUnit->finished)
+						{
+							origPos->unit = NULL;
+							turn = (turn + 1) % nrOfTeams;
+							setGamePhase(ROLL);
+							
+							return 1;
 						}
 
 						// if tile was empty
@@ -579,7 +636,7 @@ int handleGameEvent(SDL_Event* e)
 							// if tile is occupied by team member
 							if (strcmp(currentUnit->position->unit->team->name, teams[turn].name) == 0)
 							{
-								moveLegal = 0;
+								return 1;
 							}
 							else 
 							{
